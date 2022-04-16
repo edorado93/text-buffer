@@ -22,10 +22,5 @@ namespace NotAnotherTextEditor
         /// </summary>
         /// <param name="fielPath">Path for the file where the statistics are supposed to be written.</param>
         void FlushCapturedStatistics(string filePath);
-
-        /// <summary>
-        /// Emit the peak statistics captured over the execution of the process.
-        /// </summary>
-        void PrintPeakStatistics();
     }
 }
