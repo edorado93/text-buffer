@@ -2,7 +2,7 @@
 // Copyright (c) PeaceMaker Corporation. All rights reserved.
 // </copyright>
 
-namespace NotAnotherTextEditor
+namespace TextBufferCommon
 {
     /// <summary>
     /// Interface for a text buffer. Contains the essential functions that should be supported
@@ -28,7 +28,8 @@ namespace NotAnotherTextEditor
         /// Fetch the content of the provided line number.
         /// </summary>
         /// <param name="lineNumber">Line number whose content should be fetched.</param>
-        void GetLineContent(int lineNumber);
+        /// <returns>Line content</returns>
+        string GetLineContent(int lineNumber);
 
         /// <summary>
         /// Delete a certain number of characters from front.

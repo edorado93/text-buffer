@@ -2,7 +2,7 @@
 // Copyright (c) PeaceMaker Corporation. All rights reserved.
 // </copyright>
 
-namespace NotAnotherTextEditor
+namespace TextBufferCommon
 {
     /// <summary>
     /// Interface for emitting statistics by a text buffer. Every implementation of a text
