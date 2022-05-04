@@ -8,7 +8,7 @@ namespace TextBufferCommon
     /// A wrapper class over the file object. Primarily used for dependency
     /// injection so that the file related functions can be mocked out.
     /// </summary>
-    public class FileWrapper
+    public class FileWrapper : IFile
     {
         /// <summary>
         /// Reads all of the lines contained in the file.

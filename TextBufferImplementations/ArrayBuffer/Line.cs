@@ -13,7 +13,7 @@ namespace TextBufferImplementations.ArrayBuffer
     {
         private readonly StringBuilder content;
 
-        public Line(int line, string initialContent)
+        public Line(string initialContent)
         {
             this.content = new StringBuilder(initialContent);
         }

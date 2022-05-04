@@ -2,14 +2,14 @@
 // Copyright (c) PeaceMaker Corporation. All rights reserved.
 // </copyright>
 
-using Moq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using TextBufferCommon;
-
 namespace TextBufferTester
 {
+    using Moq;
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using TextBufferCommon;
+
     /// <summary>
     /// A collection of static utility functions required for testing.
     /// </summary>
@@ -24,20 +24,19 @@ namespace TextBufferTester
         /// <param name="minLineLength">Each line should contain at least these many characters.</param>
         /// <param name="maxLineLength">Each line can contain a maximum of these many characters.</param>
         /// <returns>Returns a mock object for the file wrapper.</returns>
-        public static Mock<FileWrapper> CreateFile(int numberOfLines = 10, int minLineLength = 5, int maxLineLength = 50)
+        public static Mock<IFile> CreateFile(ref IList<string> lines, int numberOfLines = 10, int minLineLength = 5, int maxLineLength = 50)
         {
-            List<string> fileLines = new List<string>();
             int lineNumber = 0;
             while (lineNumber < numberOfLines)
             {
                 var nextLineLength = randomGenerator.Next(minLineLength, maxLineLength);
-                fileLines.Add(GetRandomString(nextLineLength, lineNumber));
+                lines.Add(GetRandomString(nextLineLength, lineNumber));
 
                 lineNumber++;
             }
 
-            var fileWrapperMoq = new Mock<FileWrapper>();
-            fileWrapperMoq.Setup(f => f.ReadLines(It.IsAny<string>())).Returns(fileLines);
+            var fileWrapperMoq = new Mock<IFile>();
+            fileWrapperMoq.Setup(f => f.ReadLines(It.IsAny<string>())).Returns(lines);
 
             return fileWrapperMoq;
         }
