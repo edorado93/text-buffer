@@ -46,9 +46,9 @@ namespace TextBufferTester
         /// </summary>
         /// <param name="lines">The lines that are to be added to the file.</param>
         /// <returns>Returns a mock object for the file wrapper.</returns>
-        public static Mock<FileWrapper> CreateFileCustom(IEnumerable<string> lines)
+        public static Mock<IFile> CreateFileCustom(IEnumerable<string> lines)
         {
-            var fileWrapperMoq = new Mock<FileWrapper>();
+            var fileWrapperMoq = new Mock<IFile>();
             fileWrapperMoq.Setup(f => f.ReadLines(It.IsAny<string>())).Returns(lines);
             return fileWrapperMoq;
         }

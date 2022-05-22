@@ -18,6 +18,11 @@ namespace TextBufferImplementations.ArrayBuffer
             this.content = new StringBuilder(initialContent);
         }
 
+        public Line(Line otherLine)
+        {
+            this.content = new StringBuilder(otherLine.GetContent());
+        }
+
         /// <summary>
         /// Getter function to fetch the content of this line.
         /// </summary>

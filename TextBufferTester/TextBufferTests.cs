@@ -90,9 +90,11 @@ namespace TextBufferTester
             var fileLines = GetCustomFile();
             var fileMock = TesterUtils.CreateFileCustom(fileLines);
             var textBuffer = GetBufferImpl(fileMock.Object);
-            var originalFileLength = textBuffer.GetFileLength();
             textBuffer.LoadFile(FILENAME);
-            
+
+            // Get file length after loading the file
+            var originalFileLength = textBuffer.GetFileLength();
+
             // The 36th character is the "f" in fence in the second line.
             textBuffer.Seek(35);
 
@@ -127,27 +129,29 @@ namespace TextBufferTester
             var fileLines = GetCustomFile();
             var fileMock = TesterUtils.CreateFileCustom(fileLines);
             var textBuffer = GetBufferImpl(fileMock.Object);
-            var originalFileLength = textBuffer.GetFileLength();
             textBuffer.LoadFile(FILENAME);
+
+            // Get file length after loading the file
+            var originalFileLength = textBuffer.GetFileLength();
 
             // The 8th character is the "c" in "quick" in the first line.
             textBuffer.Seek(7);
 
             // We remove 10 characters and now we get "The quiox" in first line.
             textBuffer.Delete(10);
-            textBuffer.GetLineContent(0).Should().Be("The quiox");
+            textBuffer.GetLineContent(0).Should().Be("The quicx");
 
             // This should take the cursor to the next line i.e. line 1 and we will remove
             // 11 characters from there.
             textBuffer.Delete(13);
-            textBuffer.GetLineContent(0).Should().Be("The qui");
-            textBuffer.GetLineContent(1).Should().Be(" the fence");
+            textBuffer.GetLineContent(0).Should().Be("The quic");
+            textBuffer.GetLineContent(1).Should().Be("the fence");
             textBuffer.GetFileLength().Should().Be(originalFileLength - 23);
 
-            // This should ideally delete the line " the fence"
-            textBuffer.Delete(10);
+            // This should ideally delete the line "the fence"
+            textBuffer.Delete(9);
             textBuffer.GetLineContent(1).Should().Be("and then did some random");
-            textBuffer.GetFileLength().Should().Be(originalFileLength - 33);
+            textBuffer.GetFileLength().Should().Be(originalFileLength - 32);
 
             // Take the cursor to the beginning of the file and empty out the entire file
             textBuffer.SeekToBegin();
@@ -161,8 +165,10 @@ namespace TextBufferTester
             var fileLines = new List<string>();
             var fileMock = TesterUtils.CreateFileCustom(fileLines);
             var textBuffer = GetBufferImpl(fileMock.Object);
-            var originalFileLength = textBuffer.GetFileLength();
             textBuffer.LoadFile(FILENAME);
+
+            // Get file length after loading the file
+            var originalFileLength = textBuffer.GetFileLength();
 
             var stringToInsert = "pop pop, from the community";
 
@@ -182,8 +188,10 @@ namespace TextBufferTester
             var fileLines = GetCustomFile();
             var fileMock = TesterUtils.CreateFileCustom(fileLines);
             var textBuffer = GetBufferImpl(fileMock.Object);
-            var originalFileLength = textBuffer.GetFileLength();
             textBuffer.LoadFile(FILENAME);
+
+            // Get file length after loading the file
+            var originalFileLength = textBuffer.GetFileLength();
 
             var stringToInsert = "pop pop, from the community";
 
@@ -191,7 +199,7 @@ namespace TextBufferTester
             textBuffer.Seek(7);
 
             textBuffer.Insert(stringToInsert);
-            textBuffer.GetLineContent(0).Should().Be("The quicpop pop, from the communityk brown fox");
+            textBuffer.GetLineContent(0).Should().Be("The quipop pop, from the communityck brown fox");
             textBuffer.GetFileLength().Should().Be(originalFileLength + stringToInsert.Length);
         }
 
@@ -210,7 +218,7 @@ namespace TextBufferTester
 
             // Insert a new text and verify.
             textBuffer.Insert(" random ");
-            textBuffer.GetLineContent(2).Should().Be("and random then did some random");
+            textBuffer.GetLineContent(2).Should().Be("an random d then did some random");
 
             textBuffer.Undo();
             textBuffer.GetLineContent(2).Should().Be("and then did some random");

@@ -36,27 +36,37 @@ namespace TextBufferImplementations.ArrayBuffer
         {
             // Save for undo.
             this.SaveBufferState();
+            var charactersToBeRemoved = numberOfChars;
 
             while (this.lineCursor >= 0 && numberOfChars > 0)
             {
                 var currentLine = this.lineNumberToLineMap[this.lineCursor];
 
+                // If we are at the end of the current line, we don't need any additional increments. Else, we add one to represent
+                // the number of characters available for deletion on the current line.
+                var charsOnCurrentLineForBackspace = this.lineTextCursor + (this.IsCursorOnLineEnd() ? 0 : 1);
+
                 // All the deletions are going to happen from the current line only!
-                if (numberOfChars <= this.lineTextCursor)
+                if (numberOfChars <= charsOnCurrentLineForBackspace)
                 {
+                    currentLine.RemoveSubstring(this.lineTextCursor - numberOfChars + (this.IsCursorOnLineEnd() ? 0 : 1), numberOfChars);
                     this.lineTextCursor -= numberOfChars;
-                    currentLine.RemoveSubstring(this.lineTextCursor - numberOfChars + 1, numberOfChars);
+
+                    if (currentLine.IsEmpty())
+                    {
+                        this.RemoveLine(this.lineCursor);
+                    }
+
+                    numberOfChars = 0;
                 }
                 else
                 {
-                    numberOfChars -= this.lineTextCursor;
+                    numberOfChars -= charsOnCurrentLineForBackspace;
 
                     // Remove all the characters from the current line
                     // starting from the cursor position within that line.
-                    currentLine.RemoveSubstring(0, this.lineTextCursor);
+                    currentLine.RemoveSubstring(0, charsOnCurrentLineForBackspace);
 
-                    // If we removed all characters from the current line,
-                    // remove that line from the file.
                     if (currentLine.IsEmpty())
                     {
                         this.RemoveLine(this.lineCursor);
@@ -65,7 +75,6 @@ namespace TextBufferImplementations.ArrayBuffer
                     // Move the line cursor one step back.
                     this.lineCursor -= 1;
                     this.lineTextCursor = this.lineNumberToLineMap[this.lineCursor].GetContentLength();
-                    
                 }
             }
 
@@ -75,7 +84,7 @@ namespace TextBufferImplementations.ArrayBuffer
                 this.lineCursor = 0;
             }
 
-            this.totalFileLength -= numberOfChars;
+            this.totalFileLength -= charactersToBeRemoved;
         }
 
         /// <inheritdoc/>
@@ -83,11 +92,12 @@ namespace TextBufferImplementations.ArrayBuffer
         {
             // Save for undo.
             this.SaveBufferState();
+            var charactersToBeRemoved = numberOfChars;
 
             while (this.lineCursor < this.file.Count && numberOfChars > 0)
             {
                 var currentLine = this.lineNumberToLineMap[this.lineCursor];
-                var numberOfCharsInCurrentLineToTheRight = currentLine.GetContentLength() - this.lineTextCursor;
+                var numberOfCharsInCurrentLineToTheRight = currentLine.GetContentLength() - this.lineTextCursor - (this.lineTextCursor == 0 ? 0 : 1);
 
                 // All the deletions are going to happen from the current line only!
                 // Note that the line's text cursor does not move in this case since it
@@ -95,7 +105,13 @@ namespace TextBufferImplementations.ArrayBuffer
                 // that does not change during deletion.
                 if (numberOfChars <= numberOfCharsInCurrentLineToTheRight)
                 {
-                    currentLine.RemoveSubstring(this.lineTextCursor, numberOfChars);
+                    currentLine.RemoveSubstring(this.lineTextCursor + (this.lineTextCursor == 0 ? 0 : 1), numberOfChars);
+                    numberOfChars = 0;
+
+                    if (currentLine.IsEmpty())
+                    {
+                        this.RemoveLine(this.lineCursor);
+                    }
                 }
                 else
                 {
@@ -103,7 +119,7 @@ namespace TextBufferImplementations.ArrayBuffer
 
                     // Remove all the characters from the current line
                     // starting from the cursor position within that line.
-                    currentLine.RemoveSubstring(this.lineTextCursor, numberOfCharsInCurrentLineToTheRight);
+                    currentLine.RemoveSubstring(this.lineTextCursor +(this.lineTextCursor == 0 ? 0 : 1), numberOfCharsInCurrentLineToTheRight);
 
                     // If we removed all characters from the current line,
                     // remove that line from the file.
@@ -118,15 +134,9 @@ namespace TextBufferImplementations.ArrayBuffer
 
                     this.lineTextCursor = 0;
                 }
-
-                this.totalFileLength -= numberOfChars;
             }
 
-            // We've deleted all the content that was possible to remove from the beginning of the original line cursor.
-            if (this.lineCursor == -1)
-            {
-                this.lineCursor = 0;
-            }
+            this.totalFileLength -= charactersToBeRemoved;
         }
 
         /// <inheritdoc/>
@@ -145,6 +155,16 @@ namespace TextBufferImplementations.ArrayBuffer
         {
             // Save for undo.
             this.SaveBufferState();
+
+            if (this.IsBufferEmpty())
+            {
+                var lineObj = new Line(newString);
+                this.file.Add(lineObj);
+                this.totalFileLength += newString.Length;
+                this.lineTextCursor = newString.Length;
+                this.lineNumberToLineMap[0] = lineObj;
+                return;
+            }
 
             this.lineNumberToLineMap[this.lineCursor].AddSubstring(this.lineTextCursor, newString);
             this.totalFileLength += newString.Length;
@@ -169,8 +189,16 @@ namespace TextBufferImplementations.ArrayBuffer
                 lineNumber++;
             }
 
-            this.lineCursor--;
-            this.lineTextCursor = this.file.Last().GetContentLength();
+            if (this.IsBufferEmpty())
+            {
+                this.lineCursor = 0;
+                this.lineTextCursor = 0;
+            }
+            else
+            {
+                this.lineCursor--;
+                this.lineTextCursor = this.file.Last().GetContentLength();
+            }
         }
 
         /// <inheritdoc/>
@@ -182,7 +210,7 @@ namespace TextBufferImplementations.ArrayBuffer
             }
             else if (position > this.totalFileLength)
             {
-                position = this.totalFileLength + 1;
+                position = this.totalFileLength;
             }
 
             int totalCharactersConsidered = 0, lineNumber = 0;
@@ -191,12 +219,14 @@ namespace TextBufferImplementations.ArrayBuffer
                 var lineLength = line.GetContentLength();
 
                 // That means we have found the line containing the seek position.
-                if (totalCharactersConsidered + lineLength > position)
+                if (totalCharactersConsidered + lineLength >= position)
                 {
                     this.lineCursor = lineNumber;
                     this.lineTextCursor = (position - totalCharactersConsidered);
+                    break;
                 }
 
+                totalCharactersConsidered += lineLength;
                 lineNumber++;
             }
         }
@@ -247,9 +277,6 @@ namespace TextBufferImplementations.ArrayBuffer
             // Remove the last entry from the dictionary.
             this.lineNumberToLineMap.Remove(this.file.Count - 1);
 
-            // Update the file length.
-            this.totalFileLength -= this.file[lineNumber].GetContentLength();
-
             // Remove the line from the list of files. This is an O(n) operation.
             this.file.RemoveAt(lineNumber);
         }
@@ -289,13 +316,30 @@ namespace TextBufferImplementations.ArrayBuffer
 
             public void SaveCurrentState(List<Line> file, Dictionary<int, Line> lineNumberToLineMap, int lineCursor, int lineTextCursor, int totalFileLength)
             {
-                this.File = file;
-                this.LineNumberToLineMap = lineNumberToLineMap;
+                this.File = new List<Line>();
+                this.LineNumberToLineMap = new Dictionary<int, Line>();
+                foreach (var lineNumber in lineNumberToLineMap.Keys)
+                {
+                    var lineClone = new Line(lineNumberToLineMap[lineNumber]);
+                    this.File.Add(lineClone);
+                    this.LineNumberToLineMap[lineNumber] = lineClone;
+                }
+
                 this.LineCursor = lineCursor;
                 this.LineTextCursor = lineTextCursor;
                 this.TotalFileLength = totalFileLength;
                 this.CanRestore = true;
             }
+        }
+
+        private bool IsBufferEmpty()
+        {
+            return this.file.Count == 0;
+        }
+
+        private bool IsCursorOnLineEnd()
+        {
+            return this.lineTextCursor == this.lineNumberToLineMap[this.lineCursor].GetContentLength();
         }
     }
 }
