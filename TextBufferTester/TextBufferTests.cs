@@ -7,7 +7,9 @@ namespace TextBufferTester
     using FluentAssertions;
     using Microsoft.Extensions.Configuration;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using System;
     using System.Collections.Generic;
+    using System.Linq;
     using TextBufferCommon;
     using TextBufferImplementations.ArrayBuffer;
 
@@ -199,8 +201,38 @@ namespace TextBufferTester
             textBuffer.Seek(7);
 
             textBuffer.Insert(stringToInsert);
-            textBuffer.GetLineContent(0).Should().Be("The quipop pop, from the communityck brown fox");
+            textBuffer.GetLineContent(0).Should().Be("The quicpop pop, from the communityk brown fox");
             textBuffer.GetFileLength().Should().Be(originalFileLength + stringToInsert.Length);
+        }
+
+        [TestMethod]
+        public void TextBuffer_Insert_Multiple_Lines_VerifyFileContent()
+        {
+            var fileLines = GetCustomFile();
+            var fileMock = TesterUtils.CreateFileCustom(fileLines);
+            var textBuffer = GetBufferImpl(fileMock.Object);
+            textBuffer.LoadFile(FILENAME);
+
+            // Get file length after loading the file
+            var originalFileLength = textBuffer.GetFileLength();
+
+            var lines = new List<string>
+            {
+                "this is new line 1",
+                "this is new line 2 but it is a bit longer",
+                "this umm 3?",
+                "line 4 will continue from here! ",
+            };
+
+            textBuffer.Seek(7);
+            textBuffer.Insert(string.Join(Environment.NewLine, lines));
+
+            textBuffer.GetLineContent(0).Should().Be("The quicthis is new line 1");
+            textBuffer.GetLineContent(1).Should().Be("this is new line 2 but it is a bit longer");
+            textBuffer.GetLineContent(2).Should().Be("this umm 3?");
+            textBuffer.GetLineContent(3).Should().Be("line 4 will continue from here! k brown fox");
+            textBuffer.GetFileLength().Should().Be(originalFileLength + lines.Sum(line => line.Length));
+            textBuffer.GetCursorPosition().Should().Be(110);
         }
 
         [TestMethod]
@@ -218,7 +250,7 @@ namespace TextBufferTester
 
             // Insert a new text and verify.
             textBuffer.Insert(" random ");
-            textBuffer.GetLineContent(2).Should().Be("an random d then did some random");
+            textBuffer.GetLineContent(2).Should().Be("and random  then did some random");
 
             textBuffer.Undo();
             textBuffer.GetLineContent(2).Should().Be("and then did some random");

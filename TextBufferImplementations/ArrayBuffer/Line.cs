@@ -42,6 +42,14 @@ namespace TextBufferImplementations.ArrayBuffer
             return this.content.Length == 0;
         }
 
+        public string RemoveStringToTheRight(int cursor)
+        {
+            var numberOfCharsInCurrentLineToTheRight = this.GetContentLength() - cursor - (cursor == 0 ? 0 : 1);
+            var substringToTheRight = this.content.ToString(cursor + (cursor == 0 ? 0 : 1), numberOfCharsInCurrentLineToTheRight);
+            this.RemoveSubstring(cursor + (cursor == 0 ? 0 : 1), numberOfCharsInCurrentLineToTheRight);
+            return substringToTheRight;
+        }
+
         public int GetContentLength()
         {
             return this.content.Length;

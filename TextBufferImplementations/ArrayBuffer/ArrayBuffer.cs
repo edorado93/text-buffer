@@ -119,7 +119,7 @@ namespace TextBufferImplementations.ArrayBuffer
 
                     // Remove all the characters from the current line
                     // starting from the cursor position within that line.
-                    currentLine.RemoveSubstring(this.lineTextCursor +(this.lineTextCursor == 0 ? 0 : 1), numberOfCharsInCurrentLineToTheRight);
+                    currentLine.RemoveSubstring(this.lineTextCursor + (this.lineTextCursor == 0 ? 0 : 1), numberOfCharsInCurrentLineToTheRight);
 
                     // If we removed all characters from the current line,
                     // remove that line from the file.
@@ -153,22 +153,44 @@ namespace TextBufferImplementations.ArrayBuffer
         /// <inheritdoc/>
         public void Insert(string newString)
         {
-            // Save for undo.
-            this.SaveBufferState();
-
-            if (this.IsBufferEmpty())
+            if (string.IsNullOrEmpty(newString))
             {
-                var lineObj = new Line(newString);
-                this.file.Add(lineObj);
-                this.totalFileLength += newString.Length;
-                this.lineTextCursor = newString.Length;
-                this.lineNumberToLineMap[0] = lineObj;
                 return;
             }
 
-            this.lineNumberToLineMap[this.lineCursor].AddSubstring(this.lineTextCursor, newString);
-            this.totalFileLength += newString.Length;
-            this.lineTextCursor += newString.Length;
+            // Save for undo.
+            this.SaveBufferState();
+
+            var lines = newString.Split(Environment.NewLine);
+            var lastLineLength = lines.Last().Length;
+
+            if (this.IsBufferEmpty())
+            {
+                foreach (var updatedLine in lines)
+                {
+                    var lineObj = new Line(updatedLine);
+                    this.file.Add(lineObj);
+                    this.lineNumberToLineMap[0] = lineObj;
+                }
+            }
+            else
+            {
+                if (lines.Count() == 1)
+                {
+                    this.lineNumberToLineMap[this.lineCursor].AddSubstring(this.lineTextCursor + 1, lines[0]);
+                }
+                else
+                {
+                    var lastLine = this.lineNumberToLineMap[this.lineCursor].RemoveStringToTheRight(this.lineTextCursor);
+                    this.lineNumberToLineMap[this.lineCursor].AddSubstring(this.lineTextCursor + 1, lines[0]);
+                    lines[lines.Length - 1] = lines.Last() + lastLine;
+                    this.AddLinesAfter(this.lineCursor, lines.Skip(1));
+                }
+            }
+
+            this.totalFileLength += newString.Length - (lines.Length - 1) * Environment.NewLine.Length;
+            this.lineTextCursor = lastLineLength;
+            this.lineCursor += lines.Length - 1;
         }
 
         /// <inheritdoc/>
@@ -263,6 +285,22 @@ namespace TextBufferImplementations.ArrayBuffer
         public int GetFileLength()
         {
             return this.totalFileLength;
+        }
+
+        private void AddLinesAfter(int lineNumber, IEnumerable<string> newLines)
+        {
+            // Update remaining mappings.
+            for (int idx = this.file.Count - 1; idx > lineNumber; idx--)
+            {
+                this.lineNumberToLineMap[idx + newLines.Count()] = this.lineNumberToLineMap[idx];
+            }
+
+            for (int idx = 0; idx < newLines.Count(); idx++)
+            {
+                var newLine = new Line(newLines.ElementAt(idx));
+                this.file.Insert(lineNumber + idx + 1, newLine);
+                this.lineNumberToLineMap[lineNumber + idx + 1] = newLine;
+            }
         }
 
         /// <inheritdoc/>
