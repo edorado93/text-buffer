@@ -177,12 +177,12 @@ namespace TextBufferImplementations.ArrayBuffer
             {
                 if (lines.Count() == 1)
                 {
-                    this.lineNumberToLineMap[this.lineCursor].AddSubstring(this.lineTextCursor + 1, lines[0]);
+                    this.lineNumberToLineMap[this.lineCursor].AddSubstring(this.lineTextCursor + (this.IsCursorOnLineEnd() ? 0 : 1), lines[0]);
                 }
                 else
                 {
                     var lastLine = this.lineNumberToLineMap[this.lineCursor].RemoveStringToTheRight(this.lineTextCursor);
-                    this.lineNumberToLineMap[this.lineCursor].AddSubstring(this.lineTextCursor + 1, lines[0]);
+                    this.lineNumberToLineMap[this.lineCursor].AddSubstring(this.lineTextCursor + (this.IsCursorOnLineEnd() ? 0 : 1), lines[0]);
                     lines[lines.Length - 1] = lines.Last() + lastLine;
                     this.AddLinesAfter(this.lineCursor, lines.Skip(1));
                 }

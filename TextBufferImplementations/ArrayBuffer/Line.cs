@@ -45,6 +45,12 @@ namespace TextBufferImplementations.ArrayBuffer
         public string RemoveStringToTheRight(int cursor)
         {
             var numberOfCharsInCurrentLineToTheRight = this.GetContentLength() - cursor - (cursor == 0 ? 0 : 1);
+
+            if (numberOfCharsInCurrentLineToTheRight <= 0)
+            {
+                return string.Empty;
+            }
+
             var substringToTheRight = this.content.ToString(cursor + (cursor == 0 ? 0 : 1), numberOfCharsInCurrentLineToTheRight);
             this.RemoveSubstring(cursor + (cursor == 0 ? 0 : 1), numberOfCharsInCurrentLineToTheRight);
             return substringToTheRight;

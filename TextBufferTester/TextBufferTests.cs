@@ -236,6 +236,36 @@ namespace TextBufferTester
         }
 
         [TestMethod]
+        public void TextBuffer_Insert_Multiple_Lines_At_The_End_VerifyFileContent()
+        {
+            var fileLines = GetCustomFile();
+            var fileMock = TesterUtils.CreateFileCustom(fileLines);
+            var textBuffer = GetBufferImpl(fileMock.Object);
+            textBuffer.LoadFile(FILENAME);
+
+            // Get file length after loading the file
+            var originalFileLength = textBuffer.GetFileLength();
+
+            var lines = new List<string>
+            {
+                "this is new line 1",
+                "this is new line 2 but it is a bit longer",
+                "this umm 3?",
+                "line 4 will continue from here! ",
+            };
+
+            textBuffer.SeekToEnd();
+            textBuffer.Insert(string.Join(Environment.NewLine, lines));
+
+            textBuffer.GetLineContent(4).Should().Be("but hey, Elon took over Twitter!this is new line 1");
+            textBuffer.GetLineContent(5).Should().Be("this is new line 2 but it is a bit longer");
+            textBuffer.GetLineContent(6).Should().Be("this umm 3?");
+            textBuffer.GetLineContent(7).Should().Be("line 4 will continue from here! ");
+            textBuffer.GetFileLength().Should().Be(originalFileLength + lines.Sum(line => line.Length));
+            textBuffer.GetCursorPosition().Should().Be(originalFileLength + lines.Sum(line => line.Length));
+        }
+
+        [TestMethod]
         public void TextBuffer_Undo_VerifyVariousOperations()
         {
             var fileLines = GetCustomFile();
